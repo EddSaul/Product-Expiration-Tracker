@@ -42,4 +42,3 @@ npm run lint
 - Source: src/
 - Configs: vite.config.ts, tsconfig.json, eslint.config.js (or .eslintrc)
 
-Feel free to simplify or expand this README based on project needs.
