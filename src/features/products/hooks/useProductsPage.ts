@@ -2,12 +2,16 @@ import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/config/supabaseClient";
 import { useStore } from "@/store/useStore";
 import type { InventoryItem } from "@/features/products/types";
-import { toast } from "sonner"; 
+import { toast } from "sonner";
+import { calculateProductStatus } from "../utils/statusHelpers"; 
+
+export type SortOption = 'date' | 'category' | 'status';
 
 export function useProductsPage() {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortOption, setSortOption] = useState<SortOption>('date');
   
   const [itemToWithdraw, setItemToWithdraw] = useState<InventoryItem | null>(null);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
@@ -30,7 +34,7 @@ export function useProductsPage() {
           )
         `)
         .eq('is_removed', false) 
-        .order('expiration_date', { ascending: true });
+        .order('expiration_date', { ascending: true }); 
 
       if (error) throw error;
       setItems((data as unknown) as InventoryItem[] || []);
@@ -57,13 +61,9 @@ export function useProductsPage() {
 
         if (error) throw error;
 
-        // Accion logging
         logAction('UPDATE_STOCK', `Ajustó ${item.product?.name}: ${item.quantity} -> ${newQuantity} pzas`);
         toast.success("Inventario actualizado");
-        
-        // Update local state
         setItems(prev => prev.map(i => i.id === item.id ? { ...i, quantity: newQuantity } : i));
-        
         return true;
     } catch (err: any) {
         console.error(err);
@@ -71,7 +71,6 @@ export function useProductsPage() {
         return false;
     }
   };
-
 
   const confirmWithdraw = async () => {
     if (!itemToWithdraw) return;
@@ -85,7 +84,7 @@ export function useProductsPage() {
         if (error) throw error;
 
         logAction('REMOVE_STOCK', `Retiró ${itemToWithdraw.quantity} pzas de: ${itemToWithdraw.product?.name}`);
-        await fetchInventory(); 
+        await fetchInventory();
         setItemToWithdraw(null); 
     } catch (error: any) {
         console.error("Error al retirar:", error);
@@ -94,23 +93,51 @@ export function useProductsPage() {
     }
   };
 
-  const filteredItems = useMemo(() => {
-    return items.filter(item => 
+  const filteredAndSortedItems = useMemo(() => {
+    let result = items.filter(item => 
         item.product?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.product?.barcode.includes(searchTerm)
     );
-  }, [items, searchTerm]);
+
+    return result.sort((a, b) => {
+      if (sortOption === 'date') {
+        return new Date(a.expiration_date).getTime() - new Date(b.expiration_date).getTime();
+      }
+      
+      if (sortOption === 'category') {
+        const catA = a.product?.category?.name || "ZZZ";
+        const catB = b.product?.category?.name || "ZZZ";
+        return catA.localeCompare(catB);
+      }
+      
+      if (sortOption === 'status') {
+        const weight = (item: any) => {
+           const { status } = calculateProductStatus(item);
+           switch(status) {
+             case 'expired': return 1;
+             case 'risk': return 2;
+             case 'discount': return 3; 
+             default: return 4;
+           }
+        };
+        return weight(a) - weight(b);
+      }
+      return 0;
+    });
+  }, [items, searchTerm, sortOption]);
 
   return {
-    items: filteredItems,
+    items: filteredAndSortedItems, 
     isLoading,
     searchTerm,
     setSearchTerm,
+    sortOption,     
+    setSortOption,  
     itemToWithdraw,
     setItemToWithdraw,
     isWithdrawing,
     fetchInventory,
     confirmWithdraw,
-    updateQuantity 
+    updateQuantity
   };
 }
