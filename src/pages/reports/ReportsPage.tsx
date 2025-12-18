@@ -60,7 +60,6 @@ export default function ReportsPage() {
           } else {
             wasteQty += qty;
             categoryStats[catName].waste += qty;
-            // @ts-ignore
             const prodName = item.product?.name || "Desconocido";
             productMap[prodName] = (productMap[prodName] || 0) + qty;
           }
