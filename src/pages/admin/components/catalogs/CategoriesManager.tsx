@@ -85,20 +85,20 @@ export function CategoriesManager() {
             Reglas de Caducidad
             <div className="flex gap-2">
                 {!isAdmin && <Badge variant="outline" className="text-orange-600 border-orange-200 bg-orange-50"><Lock className="w-3 h-3 mr-1"/> Solo Lectura</Badge>}
-                <Button variant="ghost" size="sm" onClick={() => fetchCatalogs(true)}><RefreshCw className="w-4 h-4 text-gray-500"/></Button>
+                <Button variant="ghost" size="sm" onClick={() => fetchCatalogs(true)}><RefreshCw className="w-4 h-4 text-muted-foreground"/></Button>
             </div>
         </CardTitle>
         <CardDescription>Define los días antes de caducar para aplicar rebajas.</CardDescription>
       </CardHeader>
       <CardContent>
         {!editingId && (
-            <div className={`flex flex-col md:flex-row gap-3 mb-6 p-4 bg-slate-50 rounded-lg border ${!isAdmin ? 'opacity-60 pointer-events-none' : ''}`}>
+            <div className={`flex flex-col md:flex-row gap-3 mb-6 p-4 bg-muted/40 rounded-lg border ${!isAdmin ? 'opacity-60 pointer-events-none' : ''}`}>
                 <div className="flex-1">
-                    <label className="text-xs font-medium text-gray-500 mb-1 block">Nombre Categoría</label>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Nombre Categoría</label>
                     <Input placeholder="Ej: Lácteos" value={newName} onChange={e => setNewName(e.target.value)} disabled={!isAdmin} />
                 </div>
                 <div className="flex-1">
-                    <label className="text-xs font-medium text-gray-500 mb-1 block">Reglas (Días separados por comas)</label>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Reglas (Días separados por comas)</label>
                     <Input placeholder="Ej: 30, 15, 5" value={newIntervals} onChange={e => setNewIntervals(e.target.value)} disabled={!isAdmin} />
                 </div>
                 <div className="flex items-end">

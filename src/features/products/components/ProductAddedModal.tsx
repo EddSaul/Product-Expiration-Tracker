@@ -36,15 +36,15 @@ export function ProductAddedModal({ isOpen, onClose, onAddAnother, productDetail
           </DialogDescription>
         </DialogHeader>
 
-        <div className="py-4 text-sm text-muted-foreground bg-slate-50 p-4 rounded-md border space-y-1">
-          <p className="font-medium text-slate-900 text-base">{productDetails.name}</p>
+        <div className="py-4 text-sm text-muted-foreground bg-muted/40 p-4 rounded-md border space-y-1">
+          <p className="font-medium text-foreground text-base">{productDetails.name}</p>
           <div className="grid grid-cols-2 gap-2 mt-2">
             <div>
-                <span className="block text-xs text-slate-400 uppercase">Cantidad</span>
+                <span className="block text-xs text-muted-foreground uppercase">Cantidad</span>
                 <span className="font-medium">{productDetails.quantity} piezas</span>
             </div>
             <div>
-                <span className="block text-xs text-slate-400 uppercase">Caducidad</span>
+                <span className="block text-xs text-muted-foreground uppercase">Caducidad</span>
                 <span className="font-medium">{productDetails.expiration}</span>
             </div>
           </div>

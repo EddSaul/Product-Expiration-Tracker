@@ -47,7 +47,7 @@ export default function AdminCatalogsPage() {
   return (
     <div className="space-y-6 p-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight text-gray-900">Catálogos Maestros</h2>
+        <h2 className="text-3xl font-bold tracking-tight text-foreground">Catálogos Maestros</h2>
         <p className="text-muted-foreground">Configuración global de marcas y reglas de caducidad por categoría.</p>
       </div>
 

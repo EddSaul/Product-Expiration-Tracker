@@ -22,7 +22,7 @@ export function UserList({ users, isLoading, selectedUser, onSelectUser }: UserL
   );
 
   return (
-    <Card className="md:col-span-5 flex flex-col h-full border-slate-200 shadow-md overflow-hidden">
+    <Card className="md:col-span-5 flex flex-col h-full border-border shadow-md overflow-hidden">
       <CardHeader className="pb-3 border-b shrink-0">
         <div className="relative">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -34,7 +34,7 @@ export function UserList({ users, isLoading, selectedUser, onSelectUser }: UserL
           />
         </div>
       </CardHeader>
-      <CardContent className="p-0 flex-1 overflow-y-auto bg-white">
+      <CardContent className="p-0 flex-1 min-h-0 overflow-y-auto bg-card">
         {isLoading ? (
            <div className="p-8 flex flex-col items-center justify-center text-muted-foreground">
               <Loader2 className="animate-spin mb-2 h-8 w-8 text-blue-500" />
@@ -43,23 +43,23 @@ export function UserList({ users, isLoading, selectedUser, onSelectUser }: UserL
         ) : filteredUsers.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground text-sm">No se encontraron usuarios.</div>
         ) : (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-border">
             {filteredUsers.map(user => (
               <div 
                 key={user.id}
                 onClick={() => onSelectUser(user)}
-                className={`p-4 cursor-pointer hover:bg-slate-50 transition-colors flex items-center gap-4 group
-                  ${selectedUser?.id === user.id ? 'bg-blue-50 border-l-4 border-blue-600' : ''}
+                className={`p-4 cursor-pointer hover:bg-muted/40 transition-colors flex items-center gap-4 group
+                  ${selectedUser?.id === user.id ? 'bg-blue-50 border-l-4 border-blue-600 dark:bg-blue-500/10 dark:border-blue-400' : ''}
                 `}
               >
-                <Avatar className="h-10 w-10 border bg-slate-100">
-                    <AvatarFallback className="text-slate-600 font-semibold">
+                <Avatar className="h-10 w-10 border bg-muted">
+                    <AvatarFallback className="text-muted-foreground font-semibold">
                         {user.full_name?.substring(0,2).toUpperCase() || "U"}
                     </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">{user.full_name}</p>
-                  <p className="text-xs text-gray-500">ID: {user.employee_id}</p>
+                  <p className="text-sm font-medium text-foreground truncate">{user.full_name}</p>
+                  <p className="text-xs text-muted-foreground">ID: {user.employee_id}</p>
                 </div>
                 <Badge variant="outline" className="capitalize px-2 py-0.5 text-[10px]">
                   {user.role?.role_name?.replace('_', ' ')}

@@ -3,7 +3,7 @@ import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianG
 
 export function ExpirationChart({ data }: { data: any[] }) {
   return (
-    <Card className="lg:col-span-2 border-slate-200 shadow-sm h-[400px] flex flex-col">
+    <Card className="lg:col-span-2 border-border shadow-sm h-[400px] flex flex-col">
       <CardHeader className="pb-2">
         <CardTitle className="text-base">Proyección de Vencimientos (7 Días)</CardTitle>
         <CardDescription className="text-xs">

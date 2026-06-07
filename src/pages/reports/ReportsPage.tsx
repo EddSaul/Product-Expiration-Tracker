@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { ReportsKPIs } from "./components/ReportsKPIs";
 import { ReportsChart } from "./components/ReportsChart";
 import { ReportsTopOffenders } from "./components/ReportsTopOffenders";
+import { ReportsActionPlan } from "./components/ReportsActionPlan";
+import type { InventoryItem } from "@/features/products/types";
 
 export default function ReportsPage() {
   const [isLoading, setIsLoading] = useState(true);
@@ -16,6 +18,7 @@ export default function ReportsPage() {
   });
   const [chartData, setChartData] = useState<any[]>([]);
   const [topOffenders, setTopOffenders] = useState<any[]>([]);
+  const [activeItems, setActiveItems] = useState<InventoryItem[]>([]);
 
   useEffect(() => {
     fetchReportData();
@@ -24,21 +27,42 @@ export default function ReportsPage() {
   const fetchReportData = async () => {
     setIsLoading(true);
     try {
-      const { data: removedItems, error } = await supabase
-        .from('inventory_items')
-        .select(`
-          quantity,
-          removed_at,
-          product:products (
-            name,
-            category:product_categories (name),
-            brand:product_brands (participates_in_program) 
-          )
-        `)
-        .eq('is_removed', true)
-        .order('removed_at', { ascending: false });
+      const [removedRes, activeRes] = await Promise.all([
+        supabase
+          .from('inventory_items')
+          .select(`
+            quantity,
+            removed_at,
+            product:products (
+              name,
+              category:product_categories (name),
+              brand:product_brands (participates_in_program)
+            )
+          `)
+          .eq('is_removed', true)
+          .order('removed_at', { ascending: false }),
+        supabase
+          .from('inventory_items')
+          .select(`
+            id,
+            quantity,
+            expiration_date,
+            product:products (
+              name,
+              barcode,
+              exclude_from_program,
+              brand:product_brands (name, participates_in_program),
+              category:product_categories (name, discount_intervals)
+            )
+          `)
+          .eq('is_removed', false)
+          .order('expiration_date', { ascending: true }),
+      ]);
 
+      const { data: removedItems, error } = removedRes;
       if (error) throw error;
+
+      setActiveItems((activeRes.data as unknown as InventoryItem[]) || []);
 
       if (removedItems) {
         let wasteQty = 0;
@@ -105,7 +129,7 @@ export default function ReportsPage() {
       <div className="space-y-6 p-6 print:p-0">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 print:hidden">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900">Reportes de Mermas</h2>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">Reportes de Mermas</h2>
           <p className="text-muted-foreground">Análisis de pérdidas reales vs productos recuperados por rebaja.</p>
         </div>
         <div className="flex gap-2">
@@ -120,13 +144,16 @@ export default function ReportsPage() {
 
       <div className="hidden print:block mb-6">
         <h1 className="text-2xl font-bold">Reporte de Mermas y Recuperación</h1>
-        <p className="text-sm text-gray-500">Generado el {new Date().toLocaleDateString()}</p>
+        <p className="text-sm text-muted-foreground">Generado el {new Date().toLocaleDateString()}</p>
       </div>
 
       {/* 1. KPI Cards */}
       <ReportsKPIs stats={stats} />
 
-      {/* 2. Grid of Charts and Lists */}
+      {/* 2. Plan de salida (productos próximos a rebaja/caducidad) */}
+      <ReportsActionPlan items={activeItems} />
+
+      {/* 3. Grid of Charts and Lists */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 break-inside-avoid">
         
         {/* Main Chart */}
