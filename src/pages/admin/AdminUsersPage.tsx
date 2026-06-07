@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createClient } from "@supabase/supabase-js";
 import { supabase } from "@/config/supabaseClient";
 import { useStore } from "@/store/useStore";
 import { UserPlus, AlertTriangle, Loader2 } from "lucide-react";
@@ -14,14 +15,15 @@ import {
 import { UserList } from "./components/UserList";
 import { UserDetails } from "./components/UserDetails";
 import { UserModal } from "./components/UserModal";
-import type { Profile, UserLog } from "@/features/auth/types"; 
+import { toast } from "sonner";
+import type { Profile, UserLog } from "@/features/auth/types";
 
 export default function AdminUsersPage() {
   const { users, fetchUsers, roles, fetchRoles, logAction } = useStore();
-  
+
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
   const [logs, setLogs] = useState<UserLog[]>([]);
-  const [isLoadingUsers, setIsLoadingUsers] = useState(true); 
+  const [isLoadingUsers, setIsLoadingUsers] = useState(true);
   const [isLoadingLogs, setIsLoadingLogs] = useState(false);
 
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
@@ -33,14 +35,14 @@ export default function AdminUsersPage() {
     const initData = async () => {
       setIsLoadingUsers(true);
       await Promise.all([fetchUsers(), fetchRoles()]);
-      setIsLoadingUsers(false); 
+      setIsLoadingUsers(false);
     };
     initData();
   }, []);
 
   useEffect(() => {
     if (!selectedUser) return;
-    
+
     const fetchLogs = async () => {
       setIsLoadingLogs(true);
       const { data } = await supabase
@@ -49,7 +51,7 @@ export default function AdminUsersPage() {
         .eq('user_id', selectedUser.id)
         .order('created_at', { ascending: false })
         .limit(50);
-      
+
       setLogs((data as unknown as UserLog[]) || []);
       setIsLoadingLogs(false);
     };
@@ -72,8 +74,9 @@ export default function AdminUsersPage() {
           .eq('id', selectedUser.id);
 
         if (error) throw error;
-        
+
         await logAction('UPDATE_USER', `Actualizó empleado: ${formData.employeeId}`);
+        toast.success("Usuario actualizado correctamente");
         setIsUserModalOpen(false);
         fetchUsers();
 
@@ -81,7 +84,15 @@ export default function AdminUsersPage() {
         const DOMAIN_SUFFIX = "@tienda-interna.local";
         const syntheticEmail = `${formData.employeeId.trim()}${DOMAIN_SUFFIX}`;
 
-        const { error } = await supabase.auth.signUp({
+        // Cliente aislado sin persistencia: signUp inicia sesión como el nuevo
+        // usuario, así que lo aislamos para no sobrescribir la sesión del admin.
+        const signupClient = createClient(
+          import.meta.env.VITE_SUPABASE_URL,
+          import.meta.env.VITE_SUPABASE_ANON_KEY,
+          { auth: { persistSession: false, autoRefreshToken: false } }
+        );
+
+        const { error } = await signupClient.auth.signUp({
           email: syntheticEmail,
           password: formData.password,
           options: {
@@ -94,14 +105,15 @@ export default function AdminUsersPage() {
         });
 
         if (error) throw error;
-        
+
         await logAction('CREATE_USER', `Creó nuevo usuario: ${formData.employeeId}`);
+        toast.success("Empleado creado exitosamente");
         setIsUserModalOpen(false);
-        fetchUsers(); 
+        fetchUsers();
       }
     } catch (error: any) {
       console.error(error);
-      alert("Error: " + (error.message || "Ocurrió un error inesperado"));
+      toast.error("Error: " + (error.message || "Ocurrió un error inesperado"));
     }
   };
 
@@ -112,13 +124,14 @@ export default function AdminUsersPage() {
     try {
       const { error } = await supabase.from('profiles').delete().eq('id', userToDelete.id);
       if (error) throw error;
-      
+
       await logAction('DELETE_USER', `Eliminó al usuario: ${userToDelete.full_name} (${userToDelete.employee_id})`);
+      toast.success(`Usuario ${userToDelete.full_name} eliminado`);
       setSelectedUser(null);
       setUserToDelete(null);
       fetchUsers();
     } catch (error: any) {
-      alert("Error al eliminar: " + error.message);
+      toast.error("Error al eliminar: " + error.message);
     } finally {
       setIsDeleting(false);
     }
@@ -126,10 +139,10 @@ export default function AdminUsersPage() {
 
   return (
     <div className="flex flex-col gap-4 p-4 md:p-6 min-h-screen md:h-[calc(100vh-50px)] md:min-h-0">
-      
+
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">Directorio de Personal</h2>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">Directorio de Personal</h2>
           <p className="text-muted-foreground text-sm">
              {users.length} empleados registrados. Gestiona accesos, roles y auditoría.
           </p>
@@ -139,34 +152,34 @@ export default function AdminUsersPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 flex-1 h-auto md:h-full md:overflow-hidden">
-        
-        <div className="md:col-span-5 h-[400px] md:h-full">
-            <UserList 
-                users={users} 
-                isLoading={isLoadingUsers} 
-                selectedUser={selectedUser} 
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 flex-1 min-h-0 h-auto md:h-full md:overflow-hidden">
+
+        <div className="md:col-span-5 h-[60vh] md:h-full min-h-0">
+            <UserList
+                users={users}
+                isLoading={isLoadingUsers}
+                selectedUser={selectedUser}
                 onSelectUser={(u) => {
                     setSelectedUser(u);
                     if (window.innerWidth < 768) {
                         setTimeout(() => document.getElementById('user-details-panel')?.scrollIntoView({ behavior: 'smooth' }), 100);
                     }
-                }} 
+                }}
             />
         </div>
 
-        <div id="user-details-panel" className="md:col-span-7 h-[600px] md:h-full">
-            <UserDetails 
-                user={selectedUser} 
-                logs={logs} 
-                isLoadingLogs={isLoadingLogs} 
-                onEdit={(u) => { setSelectedUser(u); setIsEditing(true); setIsUserModalOpen(true); }} 
-                onDelete={(u) => setUserToDelete(u)} 
+        <div id="user-details-panel" className="md:col-span-7 h-auto md:h-full">
+            <UserDetails
+                user={selectedUser}
+                logs={logs}
+                isLoadingLogs={isLoadingLogs}
+                onEdit={(u) => { setSelectedUser(u); setIsEditing(true); setIsUserModalOpen(true); }}
+                onDelete={(u) => setUserToDelete(u)}
             />
         </div>
       </div>
 
-      <UserModal 
+      <UserModal
         isOpen={isUserModalOpen}
         onClose={() => setIsUserModalOpen(false)}
         isEditing={isEditing}
@@ -186,8 +199,8 @@ export default function AdminUsersPage() {
               Estás a punto de eliminar a <strong>{userToDelete?.full_name}</strong>.
             </DialogDescription>
           </DialogHeader>
-          
-          <div className="bg-red-50 p-4 rounded-md border border-red-100 text-sm text-red-800">
+
+          <div className="bg-red-50 p-4 rounded-md border border-red-100 text-sm text-red-800 dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-300">
             <p className="font-medium mb-1">¿Estás seguro?</p>
             <ul className="list-disc pl-4 space-y-1">
                 <li>El usuario perderá el acceso al sistema inmediatamente.</li>

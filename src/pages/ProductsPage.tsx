@@ -27,7 +27,7 @@ export default function ProductsPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900">Inventario Activo</h2>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">Inventario Activo</h2>
           <p className="text-muted-foreground">Gestiona entradas y monitorea caducidades.</p>
         </div>
         <AddInventoryModal onSaved={fetchInventory} />
@@ -35,11 +35,11 @@ export default function ProductsPage() {
 
       {/* Barra de Herramientas: Búsqueda + Ordenamiento */}
       <div className="flex flex-col md:flex-row gap-3">
-        <div className="flex-1 flex items-center gap-2 bg-white p-2 rounded-lg border shadow-sm">
-            <Search className="w-4 h-4 text-gray-400 ml-2" />
-            <Input 
-                placeholder="Buscar por nombre, código o marca..." 
-                className="border-0 focus-visible:ring-0"
+        <div className="flex-1 flex items-center gap-2 bg-card h-11 px-3 rounded-lg border shadow-sm">
+            <Search className="w-4 h-4 text-muted-foreground shrink-0" />
+            <Input
+                placeholder="Buscar por nombre, código o marca..."
+                className="border-0 focus-visible:ring-0 h-full p-0 shadow-none bg-transparent"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -48,7 +48,7 @@ export default function ProductsPage() {
         {/*Selector de Ordenamiento */}
         <div className="w-full md:w-[200px]">
             <Select value={sortOption} onValueChange={(val: SortOption) => setSortOption(val)}>
-                <SelectTrigger className="h-[42px] bg-white border shadow-sm">
+                <SelectTrigger className="h-11 bg-card border shadow-sm">
                     <div className="flex items-center text-muted-foreground">
                         <ArrowUpDown className="w-4 h-4 mr-2" />
                         <SelectValue placeholder="Ordenar por" />
@@ -63,8 +63,8 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      <Card className="border-slate-200 shadow-md overflow-hidden">
-        <CardHeader className="pb-2 bg-gray-50/50 border-b">
+      <Card className="border-border shadow-md overflow-hidden">
+        <CardHeader className="pb-2 bg-muted/30 border-b">
             <CardTitle className="text-lg flex items-center gap-2">
                 Productos en Piso <Badge variant="outline" className="ml-2">{items.length}</Badge>
             </CardTitle>

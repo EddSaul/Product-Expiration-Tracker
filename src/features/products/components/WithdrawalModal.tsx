@@ -31,7 +31,7 @@ export function WithdrawalModal({ isOpen, onClose, onConfirm, productName, isWit
           </DialogDescription>
         </DialogHeader>
 
-        <div className="py-4 text-sm text-muted-foreground bg-slate-50 p-4 rounded-md border">
+        <div className="py-4 text-sm text-muted-foreground bg-muted/40 p-4 rounded-md border">
           <p>• El producto se moverá al historial de retirados.</p>
           <p>• Se eliminará permanentemente en <strong>2 semanas</strong>.</p>
           <p>• Esta acción <strong>no</strong> afecta al catálogo maestro.</p>

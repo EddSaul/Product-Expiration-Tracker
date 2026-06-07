@@ -16,7 +16,7 @@ interface ReportsChartProps {
 
 export function ReportsChart({ data }: ReportsChartProps) {
   return (
-    <Card className="col-span-4 border-slate-200 shadow-sm">
+    <Card className="col-span-4 border-border shadow-sm">
       <CardHeader>
         <CardTitle>Balance de Retiros por Categoría</CardTitle>
         <CardDescription>Comparativa de pérdidas (rojo) vs recuperados (verde).</CardDescription>

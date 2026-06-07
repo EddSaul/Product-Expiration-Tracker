@@ -82,7 +82,7 @@ export function UserModal({ isOpen, onClose, isEditing, userToEdit, roles, onSav
               value={formData.employeeId} 
               onChange={(e) => setFormData({...formData, employeeId: e.target.value})}
               disabled={isEditing} 
-              className={isEditing ? "bg-slate-100 text-slate-500" : ""}
+              className={isEditing ? "bg-muted text-muted-foreground" : ""}
             />
           </div>
 

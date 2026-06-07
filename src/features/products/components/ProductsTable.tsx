@@ -9,8 +9,8 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Calendar, AlertCircle, AlertTriangle, Tag, CheckCircle2, ArchiveX, Loader2, Pencil, Check, X } from "lucide-react";
+import { Calendar, AlertCircle, AlertTriangle, Tag, CheckCircle2, ArchiveX, Loader2, Pencil, Check, X, PackageSearch } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { InventoryItem } from "@/features/products/types";
 import { calculateProductStatus } from "@/features/products/utils/statusHelpers";
 
@@ -22,13 +22,54 @@ interface ProductsTableProps {
   emptyMessage?: string;
 }
 
+function ProductsTableSkeleton() {
+  return (
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[120px]">Código</TableHead>
+            <TableHead className="min-w-[200px]">Producto</TableHead>
+            <TableHead className="hidden md:table-cell">Marca</TableHead>
+            <TableHead className="hidden md:table-cell">Categoría</TableHead>
+            <TableHead>Caducidad</TableHead>
+            <TableHead>Estado</TableHead>
+            <TableHead className="text-right w-[140px]">Piezas</TableHead>
+            <TableHead className="text-right">Acciones</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <TableRow key={i}>
+              <TableCell><div className="h-4 w-20 bg-muted animate-pulse rounded" /></TableCell>
+              <TableCell><div className="h-4 w-36 bg-muted animate-pulse rounded" /></TableCell>
+              <TableCell className="hidden md:table-cell"><div className="h-4 w-20 bg-muted animate-pulse rounded" /></TableCell>
+              <TableCell className="hidden md:table-cell"><div className="h-5 w-16 bg-muted animate-pulse rounded-full" /></TableCell>
+              <TableCell><div className="h-4 w-24 bg-muted animate-pulse rounded" /></TableCell>
+              <TableCell><div className="h-5 w-16 bg-muted animate-pulse rounded-full" /></TableCell>
+              <TableCell className="text-right"><div className="h-4 w-8 bg-muted animate-pulse rounded ml-auto" /></TableCell>
+              <TableCell className="text-right"><div className="h-8 w-8 bg-muted animate-pulse rounded ml-auto" /></TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
 export function ProductsTable({ items, isLoading, onWithdrawClick, onUpdateQuantity, emptyMessage = "No hay productos." }: ProductsTableProps) {
   if (isLoading) {
-    return <div className="flex justify-center py-12"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>;
+    return <ProductsTableSkeleton />;
   }
 
   if (items.length === 0) {
-    return <div className="text-center py-12 text-muted-foreground">{emptyMessage}</div>;
+    return (
+      <EmptyState
+        icon={PackageSearch}
+        title={emptyMessage}
+        description="Cuando registres productos en el inventario, aparecerán aquí."
+      />
+    );
   }
 
   return (
@@ -48,11 +89,11 @@ export function ProductsTable({ items, isLoading, onWithdrawClick, onUpdateQuant
         </TableHeader>
         <TableBody>
           {items.map((item) => (
-            <ProductRow 
-                key={item.id} 
-                item={item} 
-                onWithdraw={() => onWithdrawClick(item)} 
-                onUpdateQuantity={onUpdateQuantity} 
+            <ProductRow
+                key={item.id}
+                item={item}
+                onWithdraw={() => onWithdrawClick(item)}
+                onUpdateQuantity={onUpdateQuantity}
             />
           ))}
         </TableBody>
@@ -61,23 +102,29 @@ export function ProductsTable({ items, isLoading, onWithdrawClick, onUpdateQuant
   );
 }
 
-// Subcomponent for each product row
+const statusBorderColor: Record<string, string> = {
+  expired: 'border-l-4 border-l-red-500',
+  risk: 'border-l-4 border-l-orange-400',
+  discount: 'border-l-4 border-l-blue-500',
+  ok: 'border-l-4 border-l-transparent',
+};
+
 function ProductRow({ item, onWithdraw, onUpdateQuantity }: { item: InventoryItem; onWithdraw: () => void, onUpdateQuantity: (item: InventoryItem, qty: number) => Promise<boolean> }) {
   const { status, daysLeft } = calculateProductStatus(item);
 
   return (
-    <TableRow className="group hover:bg-slate-50">
-      <TableCell className="font-mono text-xs text-muted-foreground group-hover:text-slate-900">
+    <TableRow className={`group hover:bg-muted/40 ${statusBorderColor[status] || statusBorderColor.ok}`}>
+      <TableCell className="font-mono text-xs text-muted-foreground group-hover:text-foreground">
         {item.product?.barcode}
       </TableCell>
-      <TableCell className="font-medium text-slate-900">{item.product?.name}</TableCell>
+      <TableCell className="font-medium text-foreground">{item.product?.name}</TableCell>
       <TableCell className="hidden md:table-cell text-muted-foreground">{item.product?.brand?.name}</TableCell>
       <TableCell className="hidden md:table-cell">
-        <Badge variant="outline" className="font-normal">{item.product?.category?.name}</Badge>
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/25">{item.product?.category?.name}</span>
       </TableCell>
       <TableCell className="text-sm">
         <div className="flex items-center gap-2">
-          <Calendar className="h-3 w-3 text-gray-400" />
+          <Calendar className="h-3 w-3 text-muted-foreground" />
           <span className={daysLeft < 0 ? "text-red-600 font-medium" : ""}>
             {new Date(item.expiration_date).toLocaleDateString()}
           </span>
@@ -89,14 +136,14 @@ function ProductRow({ item, onWithdraw, onUpdateQuantity }: { item: InventoryIte
       <TableCell>
         <StatusBadge status={status} />
       </TableCell>
-      
+
       {/* Editable quantity */}
       <TableCell className="text-right">
         <QuantityCell item={item} onUpdate={onUpdateQuantity} />
       </TableCell>
 
       <TableCell className="text-right">
-        <Button variant="ghost" size="icon" onClick={onWithdraw} title="Retirar" className="text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors">
+        <Button variant="ghost" size="icon" onClick={onWithdraw} aria-label={`Retirar ${item.product?.name}`} className="text-muted-foreground hover:text-red-600 hover:bg-red-50 transition-colors">
           <ArchiveX className="h-4 w-4" />
         </Button>
       </TableCell>
@@ -116,32 +163,33 @@ function QuantityCell({ item, onUpdate }: { item: InventoryItem, onUpdate: (item
         setValue(item.quantity.toString());
         return;
     }
-    
+
     setIsSaving(true);
     const success = await onUpdate(item, num);
     setIsSaving(false);
-    
+
     if (success) setIsEditing(false);
   };
 
   if (isEditing) {
     return (
       <div className="flex items-center justify-end gap-1">
-         <Input 
-            type="number" 
-            className="h-7 w-16 px-1 text-center text-sm" 
-            value={value} 
+         <Input
+            type="number"
+            className="h-7 w-16 px-1 text-center text-sm"
+            value={value}
             onChange={e => setValue(e.target.value)}
             autoFocus
+            aria-label="Editar cantidad"
             onKeyDown={(e) => {
                 if (e.key === "Enter") handleSave();
                 if (e.key === "Escape") setIsEditing(false);
             }}
          />
-         <Button size="icon" variant="ghost" className="h-7 w-7 text-green-600 hover:bg-green-50" onClick={handleSave} disabled={isSaving}>
-            {isSaving ? <Loader2 className="h-3 w-3 animate-spin"/> : <Check className="h-3 w-3"/>}
+         <Button size="icon" variant="ghost" className="h-7 w-7 text-green-600 hover:bg-green-50" onClick={handleSave} disabled={isSaving} aria-label="Guardar cantidad">
+            {isSaving ? <Loader2 className="h-3 w-3 animate-spin" role="status" aria-label="Guardando" /> : <Check className="h-3 w-3"/>}
          </Button>
-         <Button size="icon" variant="ghost" className="h-7 w-7 text-red-400 hover:bg-red-50" onClick={() => { setIsEditing(false); setValue(item.quantity.toString()); }}>
+         <Button size="icon" variant="ghost" className="h-7 w-7 text-red-400 hover:bg-red-50" onClick={() => { setIsEditing(false); setValue(item.quantity.toString()); }} aria-label="Cancelar edición">
             <X className="h-3 w-3"/>
          </Button>
       </div>
@@ -150,13 +198,13 @@ function QuantityCell({ item, onUpdate }: { item: InventoryItem, onUpdate: (item
 
   return (
     <div className="flex items-center justify-end gap-2 group/qty relative">
-       <span className="font-bold text-slate-700">{item.quantity}</span>
-       <Button 
-         size="icon" 
-         variant="ghost" 
-         className="h-6 w-6 opacity-0 group-hover/qty:opacity-100 transition-opacity text-slate-400 hover:text-blue-600 absolute -right-8"
+       <span className="font-bold text-foreground/90">{item.quantity}</span>
+       <Button
+         size="icon"
+         variant="ghost"
+         className="h-6 w-6 opacity-0 group-hover/qty:opacity-100 transition-opacity text-muted-foreground hover:text-blue-600 absolute -right-8"
          onClick={() => { setValue(item.quantity.toString()); setIsEditing(true); }}
-         title="Editar cantidad"
+         aria-label={`Editar cantidad de ${item.product?.name}`}
        >
          <Pencil className="h-3 w-3" />
        </Button>
@@ -165,10 +213,11 @@ function QuantityCell({ item, onUpdate }: { item: InventoryItem, onUpdate: (item
 }
 
 function StatusBadge({ status }: { status: string }) {
+  const base = "flex w-fit items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border";
   switch (status) {
-    case 'expired': return <Badge variant="destructive" className="flex w-fit items-center gap-1 px-2"><AlertCircle className="h-3 w-3"/> Vencido</Badge>;
-    case 'risk': return <Badge className="bg-orange-500 hover:bg-orange-600 flex w-fit items-center gap-1 px-2"><AlertTriangle className="h-3 w-3"/> Crítico</Badge>;
-    case 'discount': return <Badge className="bg-blue-600 hover:bg-blue-700 flex w-fit items-center gap-1 px-2"><Tag className="h-3 w-3"/> Rebaja</Badge>;
-    default: return <Badge variant="secondary" className="text-green-700 bg-green-100 hover:bg-green-200 flex w-fit items-center gap-1 px-2"><CheckCircle2 className="h-3 w-3"/> OK</Badge>;
+    case 'expired': return <span className={`${base} bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/25`}><AlertCircle className="h-3 w-3"/> Vencido</span>;
+    case 'risk': return <span className={`${base} bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/25`}><AlertTriangle className="h-3 w-3"/> Crítico</span>;
+    case 'discount': return <span className={`${base} bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/25`}><Tag className="h-3 w-3"/> Rebaja</span>;
+    default: return <span className={`${base} bg-green-50 text-green-700 border-green-200 dark:bg-green-500/10 dark:text-green-300 dark:border-green-500/25`}><CheckCircle2 className="h-3 w-3"/> OK</span>;
   }
 }

@@ -57,15 +57,15 @@ export function BrandsManager() {
             Marcas del Sistema
             <div className="flex gap-2">
                 {!isAdmin && <Badge variant="outline" className="text-orange-600 border-orange-200 bg-orange-50"><Lock className="w-3 h-3 mr-1"/> Solo Lectura</Badge>}
-                <Button variant="ghost" size="sm" onClick={() => fetchCatalogs(true)}><RefreshCw className="w-4 h-4 text-gray-500"/></Button>
+                <Button variant="ghost" size="sm" onClick={() => fetchCatalogs(true)}><RefreshCw className="w-4 h-4 text-muted-foreground"/></Button>
             </div>
         </CardTitle>
         <CardDescription>Gestiona qué marcas participan en el programa.</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className={`flex gap-2 mb-6 p-4 bg-slate-50 rounded-lg border items-end ${!isAdmin ? 'opacity-60 pointer-events-none' : ''}`}>
+        <div className={`flex gap-2 mb-6 p-4 bg-muted/40 rounded-lg border items-end ${!isAdmin ? 'opacity-60 pointer-events-none' : ''}`}>
             <div className="flex-1">
-                <label className="text-xs font-medium text-gray-500 mb-1 block">Nueva Marca</label>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Nueva Marca</label>
                 <Input placeholder="Ej: Valley Foods" value={newName} onChange={e => setNewName(e.target.value)} disabled={!isAdmin} />
             </div>
             <Button onClick={addBrand} disabled={isSubmitting || !isAdmin}>
@@ -75,7 +75,7 @@ export function BrandsManager() {
 
         <div className="rounded-md border h-[500px] overflow-y-auto">
             <Table>
-                <TableHeader className="sticky top-0 bg-white z-10">
+                <TableHeader className="sticky top-0 bg-card z-10">
                     <TableRow>
                         <TableHead className="w-[50px]">ID</TableHead>
                         <TableHead>Nombre</TableHead>
@@ -93,7 +93,7 @@ export function BrandsManager() {
                                     variant={b.participates_in_program ? "default" : "outline"} size="sm"
                                     onClick={() => toggleProgram(b.id, b.participates_in_program)}
                                     disabled={!isAdmin}
-                                    className={`h-7 text-xs ${b.participates_in_program ? "bg-green-600 hover:bg-green-700" : "text-gray-500"}`}
+                                    className={`h-7 text-xs ${b.participates_in_program ? "bg-green-600 hover:bg-green-700" : "text-muted-foreground"}`}
                                 >
                                     {b.participates_in_program ? "Sí, Participa" : "No Participa"}
                                 </Button>
